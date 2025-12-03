@@ -1,0 +1,40 @@
+name: 'Setup Node.js'
+description: 'Setup Node.js and install dependencies'
+
+inputs:
+  registry-url:
+    description: 'Registry URL to setup up for auth. Passed on to actions/setup-node.'
+    default: ''
+  audit-level:
+    description: 'npm audit-level <info|low|moderate|high|critical|none>'
+    default: 'high'
+  node-version:
+    description: 'Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0.'
+  node-version-file:
+    description: 'File containing the version Spec of the version to use.  Examples: package.json, .nvmrc, .node-version, .tool-versions.'
+  readonly-token:
+    description: 'Add a Github or Node.js Token (read-only) which will be used for fetching node and npm packages.'
+  run-npm-audit:
+    description: 'Run npm audit script'
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
+      with:
+        cache: 'npm'
+        node-version: "${{ inputs.node-version }}"
+        node-version-file: "${{ inputs.node-version-file }}"
+        registry-url: "${{ inputs.registry-url }}"
+        token: "${{ inputs.readonly-token }}"
+
+    - name: Audit dependencies
+      if: ${{ inputs.run-npm-audit == 'true' }}
+      shell: bash
+      run: npm audit --audit-level="${{ inputs.audit-level }}"
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci --ignore-scripts
